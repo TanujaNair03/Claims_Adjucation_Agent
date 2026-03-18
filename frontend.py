@@ -1,8 +1,11 @@
+import os
+
 import requests
 import streamlit as st
 
 
-API_URL = "http://127.0.0.1:8000/process_claim"
+backend_base_url = st.secrets.get("BACKEND_API_URL", os.getenv("BACKEND_API_URL", "http://127.0.0.1:8000"))
+API_URL = f"{backend_base_url.rstrip('/')}/process_claim"
 
 
 st.set_page_config(
