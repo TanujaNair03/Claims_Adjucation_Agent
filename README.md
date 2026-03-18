@@ -4,7 +4,7 @@ An enterprise-grade medical claims adjudication engine built for the Alchemyst A
 
 ## Live Demo & Links
 
-- Live Dashboard: `[PASTE_YOUR_STREAMLIT_URL_HERE]`
+- Live Dashboard: `https://claimsadjucationagent.streamlit.app`
 - API Documentation: [https://claims-adjucation-agent.onrender.com/docs](https://claims-adjucation-agent.onrender.com/docs)
 - Backend Status: `Live` on Render
 
