@@ -14,6 +14,14 @@ st.set_page_config(
 )
 
 
+with st.sidebar:
+    user_key = st.text_input(
+        "Custom Gemini API Key",
+        type="password",
+        help="Use this if the system demo key hits a rate limit.",
+    )
+
+
 def render_status_box(status: str, decision_reason: str) -> None:
     if status == "APPROVED":
         st.success(f"{status}: {decision_reason}")
@@ -70,10 +78,13 @@ if submitted:
         "billed_amount": billed_amount,
         "clinical_notes": clinical_notes,
     }
+    headers = {}
+    if user_key:
+        headers["X-Gemini-API-Key"] = user_key
 
     try:
         with st.spinner("Processing claim through the adjudication agent..."):
-            response = requests.post(API_URL, json=payload, timeout=60)
+            response = requests.post(API_URL, json=payload, headers=headers, timeout=60)
             response.raise_for_status()
             result = response.json()
 

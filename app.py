@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from google.api_core.exceptions import NotFound
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -348,12 +348,20 @@ def read_root() -> Dict[str, str]:
 
 
 @app.post("/process_claim", response_model=ClaimResponse)
-def process_claim(claim_request: ClaimRequest) -> ClaimResponse:
+def process_claim(
+    claim_request: ClaimRequest,
+    x_gemini_api_key: Optional[str] = Header(None),
+) -> ClaimResponse:
     # Best practice: keep this validation deterministic and outside the LLM so
     # we avoid wasting tokens on requests that cannot be adjudicated yet.
     missing_fields = detect_missing_fields(claim_request)
     if missing_fields:
         return build_pending_response(claim_request, missing_fields)
+
+    if x_gemini_api_key:
+        os.environ["GOOGLE_API_KEY"] = x_gemini_api_key
+        get_gemini_model.cache_clear()
+        get_claim_agent.cache_clear()
 
     try:
         agent = get_claim_agent()
