@@ -13,6 +13,8 @@ This project simulates how a healthcare claims platform can:
 - analyze unstructured clinical notes against the billed procedure
 - return a structured adjudication decision with payout and patient responsibility
 
+All monetary values in this demo are presented in `INR`.
+
 ## Features
 
 - `FastAPI` backend with Swagger UI
@@ -67,10 +69,19 @@ The backend exposes a single POST endpoint:
   "patient_id": "PAT001",
   "provider_id": "PRV300",
   "procedure_code": "99213",
-  "billed_amount": 175.0,
+  "billed_amount": 1750.0,
   "clinical_notes": "Patient seen for routine follow-up visit. Symptoms are stable."
 }
 ```
+
+### Request Field Meanings
+
+- `claim_id`: unique identifier for the claim submission being adjudicated
+- `patient_id`: member or beneficiary identifier used to retrieve eligibility and utilization history
+- `provider_id`: hospital, clinic, or billing provider identifier used for fraud and anomaly checks
+- `procedure_code`: billed treatment or CPT-style code used to check coverage and compare against clinical notes
+- `billed_amount`: total amount charged by the provider for the claim, in INR
+- `clinical_notes`: unstructured medical narrative used by the LLM to verify whether the billed procedure is clinically justified
 
 ### Response Schema
 
@@ -79,12 +90,30 @@ The backend exposes a single POST endpoint:
   "claim_id": "CLM-001",
   "status": "APPROVED",
   "decision_reason": "Claim passed policy, fraud, and clinical validation.",
-  "payout_amount": 0.0,
-  "patient_responsibility": 0.0,
+  "payout_amount": 1470.0,
+  "patient_responsibility": 280.0,
   "missing_fields": [],
   "confidence_notes": "Tool-assisted decision based on policy, fraud, and clinical review."
 }
 ```
+
+### Response Field Meanings
+
+- `claim_id`: echoes the input claim identifier so downstream systems can reconcile the response
+- `status`: final adjudication outcome returned by the agentic workflow
+- `decision_reason`: short explanation summarizing why the claim was approved, denied, or flagged
+- `payout_amount`: amount payable by the insurer after deductible and copay calculations, in INR
+- `patient_responsibility`: amount owed by the patient, in INR
+- `missing_fields`: list of required fields that were absent from the request, if any
+- `confidence_notes`: supporting notes describing the evidence or model reasoning behind the decision
+
+### Status Meanings
+
+- `PENDING_PROVIDER_INFO`: claim is incomplete and needs additional structured data before adjudication
+- `DENIED`: deterministic policy or eligibility rules failed
+- `FLAGGED_FRAUD_RISK`: utilization or provider behavior triggered fraud or anomaly review
+- `FLAGGED_CLINICAL_MISMATCH`: clinical notes did not support the billed procedure
+- `APPROVED`: all checks passed and a payout was calculated
 
 ## Agentic Workflow
 
@@ -131,6 +160,8 @@ payout_amount = max(billed_amount - copay - deductible_applied, 0)
 patient_responsibility = copay + deductible_applied
 ```
 
+In this demo, `copay`, `deductible_remaining`, `billed_amount`, `payout_amount`, and `patient_responsibility` are all treated as INR values.
+
 ## Mock Data Sources
 
 The backend uses hardcoded dictionaries to simulate enterprise systems:
@@ -149,7 +180,7 @@ The `Streamlit` app provides a hospital admin dashboard where users can:
 - enter claim information in a structured form
 - submit the claim to the FastAPI backend
 - view adjudication outcomes using colored status cards
-- inspect payout and patient responsibility metrics
+- inspect payout and patient responsibility metrics in INR
 - expand confidence notes for additional model reasoning context
 
 ## Setup
@@ -212,7 +243,7 @@ The dashboard will open in your browser automatically.
   "patient_id": "PAT001",
   "provider_id": "PRV300",
   "procedure_code": "99213",
-  "billed_amount": 175.0,
+  "billed_amount": 1750.0,
   "clinical_notes": "Patient seen for routine follow-up visit. Symptoms are stable."
 }
 ```
@@ -225,7 +256,7 @@ The dashboard will open in your browser automatically.
   "patient_id": "PAT001",
   "provider_id": "PRV200",
   "procedure_code": "99213",
-  "billed_amount": 175.0,
+  "billed_amount": 1750.0,
   "clinical_notes": "Routine office visit for stable symptoms."
 }
 ```
@@ -238,7 +269,7 @@ The dashboard will open in your browser automatically.
   "patient_id": "",
   "provider_id": "PRV300",
   "procedure_code": "",
-  "billed_amount": 175.0,
+  "billed_amount": 1750.0,
   "clinical_notes": "Routine follow-up."
 }
 ```

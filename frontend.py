@@ -6,6 +6,7 @@ import streamlit as st
 
 backend_base_url = st.secrets.get("BACKEND_API_URL", os.getenv("BACKEND_API_URL", "http://127.0.0.1:8000"))
 API_URL = f"{backend_base_url.rstrip('/')}/process_claim"
+INR_SYMBOL = "\u20b9"
 
 
 st.set_page_config(
@@ -35,8 +36,12 @@ def render_status_box(status: str, decision_reason: str) -> None:
         st.error(f"{status}: {decision_reason}")
 
 
+def format_inr(amount: float) -> str:
+    return f"{INR_SYMBOL}{amount:,.2f}"
+
+
 st.title("Hospital Claim Adjudication Portal")
-st.caption("Submit medical claims and review AI-assisted adjudication outcomes in real time.")
+st.caption("Submit medical claims and review AI-assisted adjudication outcomes in real time. All monetary values are shown in INR.")
 
 
 with st.container():
@@ -50,10 +55,10 @@ with st.container():
         with col2:
             procedure_code = st.text_input("Procedure Code", value="99213")
             billed_amount = st.number_input(
-                "Billed Amount",
+                "Billed Amount (INR)",
                 min_value=0.0,
-                value=175.0,
-                step=25.0,
+                value=1750.0,
+                step=100.0,
                 format="%.2f",
             )
 
@@ -95,13 +100,13 @@ if submitted:
         metrics_col1, metrics_col2 = st.columns(2)
         with metrics_col1:
             st.metric(
-                label="Payout Amount",
-                value=f"${result.get('payout_amount', 0.0):,.2f}",
+                label="Payout Amount (INR)",
+                value=format_inr(result.get("payout_amount", 0.0)),
             )
         with metrics_col2:
             st.metric(
-                label="Patient Responsibility",
-                value=f"${result.get('patient_responsibility', 0.0):,.2f}",
+                label="Patient Responsibility (INR)",
+                value=format_inr(result.get("patient_responsibility", 0.0)),
             )
 
         missing_fields = result.get("missing_fields") or []
