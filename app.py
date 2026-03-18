@@ -28,17 +28,17 @@ CODES_DB: Dict[str, Dict[str, Any]] = {
     "99213": {
         "description": "Routine outpatient follow-up visit",
         "is_covered": True,
-        "standard_cost": 120.0,
+        "standard_cost": 1500.0,
     },
     "27447": {
         "description": "Complex total knee replacement surgery",
         "is_covered": True,
-        "standard_cost": 18000.0,
+        "standard_cost": 250000.0,
     },
     "EX999": {
         "description": "Experimental elective treatment",
         "is_covered": False,
-        "standard_cost": 5000.0,
+        "standard_cost": 50000.0,
     },
 }
 
@@ -266,6 +266,7 @@ Decision rules:
 - If policy/coverage says the patient is ineligible, the patient is missing, the
   procedure code is missing from records, or the procedure is not covered, return `DENIED`.
 - If fraud/anomaly checks are flagged, return `FLAGGED_FRAUD_RISK`.
+- If the billed_amount is more than 5 times the standard_cost returned by the check_policy_and_coverage tool, you must return FLAGGED_FRAUD_RISK and set the decision_reason to 'Billed amount exponentially exceeds the standard reasonable cost (UCR) for this procedure.' Do not approve the claim.
 - If clinical note review says match=false, return `FLAGGED_CLINICAL_MISMATCH`.
 - Otherwise return `APPROVED`.
 
